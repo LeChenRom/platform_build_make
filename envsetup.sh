@@ -298,6 +298,32 @@ function setpaths()
     unset ANDROID_TARGET_OUT_TESTCASES
     export ANDROID_TARGET_OUT_TESTCASES=$(get_abs_build_var TARGET_OUT_TESTCASES)
 
+    if [ "$USE_CCACHE" = 1 ]; then
+        if [ ! "$CCACHE_DIR" ]; then
+            export CCACHE_DIR=~/.ccache
+        fi
+        if [ ! "$USE_LEGACY_CCACHE_DIR" ]; then
+            export CCACHE_DIR=$(echo ${CCACHE_DIR%%/ArrowOS_*})/$product
+            if [ -z "$CCACHE_SIZE" ]; then
+                CCACHE_SIZE=16G
+            fi
+        else
+            export CCACHE_DIR=$(echo ${CCACHE_DIR%%/ArrowOS_*})/Arrow_default
+            if [ -z "$CCACHE_SIZE" ]; then
+                CCACHE_SIZE=50G
+            fi
+        fi
+        if [ ! -d "$CCACHE_DIR" ]; then
+            mkdir -p "$CCACHE_DIR"
+        fi
+         CCACHE_PATH=$(which ccache)
+        if [ ! -n "$CCACHE_PATH" ] ; then
+            prebuilts/misc/$(get_build_var HOST_PREBUILT_TAG)/ccache/ccache -M $CCACHE_SIZE
+        else
+            $CCACHE_PATH -M $CCACHE_SIZE
+        fi
+    fi
+
     export SUDA_CPU_ABI=$(get_build_var TARGET_CPU_ABI)
 
     # needed for building linux on MacOS
